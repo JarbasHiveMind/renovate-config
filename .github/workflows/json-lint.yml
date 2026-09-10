@@ -1,0 +1,25 @@
+name: JSON lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  json-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate every JSON file
+        run: |
+          n=0; bad=0
+          while IFS= read -r f; do
+            n=$((n+1))
+            if ! python3 -m json.tool "$f" >/dev/null; then
+              echo "invalid JSON: $f"; bad=$((bad+1))
+            fi
+          done < <(git ls-files '*.json')
+          echo "$n JSON files checked, $bad invalid"
+          test "$n" -gt 0 && test "$bad" -eq 0
